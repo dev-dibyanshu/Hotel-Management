@@ -10,6 +10,17 @@ This project follows a microservices architecture with simple, layered design in
 Controller → Service → Repository → DbContext → SQL Server
 ```
 
+## Architecture Components
+
+### API Gateway
+Single entry point for all microservices using Ocelot.
+
+**Port:** `https://localhost:7000`
+
+**Routes:** All client requests go through `/gateway/*` endpoints
+
+[View API Gateway Documentation](./ApiGateway/README.md)
+
 ## Microservices
 
 ### 1. IdentityService
@@ -40,18 +51,38 @@ Core hotel operations management service.
 
 [View HotelService Documentation](./HotelService/README.md)
 
+### 3. ManagementService
+Hotel management operations service.
+
+**Features:**
+- Staff management with role-based authorization
+- Department management
+- Inventory tracking with quantity management
+- Bill generation and management
+- Payment processing with multiple payment methods
+
+**Port:** `https://localhost:7001`
+
+[View ManagementService Documentation](./ManagementService/README.md)
+
 ## Technology Stack
 
 - **Framework:** ASP.NET Core 8.0 Web API
+- **API Gateway:** Ocelot 23.3.3
 - **ORM:** Entity Framework Core 8.0
 - **Database:** SQL Server
 - **Authentication:** JWT Bearer Tokens
 - **API Documentation:** Swagger/OpenAPI
+- **Exception Handling:** IExceptionHandler
 
 ## Project Structure
 
 ```
 Hotel-Management/
+├── ApiGateway/               # Ocelot API Gateway
+│   ├── ocelot.json
+│   ├── Program.cs
+│   └── README.md
 ├── IdentityService/          # Authentication microservice
 │   ├── Controllers/
 │   ├── DTOs/
@@ -59,6 +90,7 @@ Hotel-Management/
 │   ├── Models/
 │   ├── Repositories/
 │   ├── Services/
+│   ├── Exceptions/
 │   ├── Migrations/
 │   └── README.md
 ├── HotelService/             # Hotel operations microservice
@@ -68,6 +100,17 @@ Hotel-Management/
 │   ├── Models/
 │   ├── Repositories/
 │   ├── Services/
+│   ├── Exceptions/
+│   ├── Migrations/
+│   └── README.md
+├── ManagementService/        # Management operations microservice
+│   ├── Controllers/
+│   ├── DTOs/
+│   ├── Data/
+│   ├── Models/
+│   ├── Repositories/
+│   ├── Services/
+│   ├── Exceptions/
 │   ├── Migrations/
 │   └── README.md
 └── README.md
@@ -85,43 +128,57 @@ Hotel-Management/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/dev-dibyanshu/Hotel-Managerment.git
-   cd Hotel-Managerment
+   git clone https://github.com/dev-dibyanshu/Hotel-Management.git
+   cd Hotel-Management
    ```
 
-2. **Configure IdentityService:**
+2. **Configure each microservice:**
+   - Update `appsettings.json` in each service with your SQL Server connection string
+   - Ensure JWT configuration is identical across all services
+   - Apply migrations in each service: `dotnet ef database update`
+
+3. **Run all services:**
    ```bash
+   # Terminal 1 - IdentityService
    cd IdentityService
+   dotnet run
+   
+   # Terminal 2 - HotelService
+   cd HotelService
+   dotnet run
+   
+   # Terminal 3 - ManagementService
+   cd ManagementService
+   dotnet run
+   
+   # Terminal 4 - API Gateway
+   cd ApiGateway
+   dotnet run
    ```
-   - Update `appsettings.json` with your SQL Server connection string
-   - Update JWT configuration
-   - Apply migrations: `dotnet ef database update`
-   - Run: `dotnet run`
-
-3. **Configure HotelService:**
-   ```bash
-   cd ../HotelService
-   ```
-   - Update `appsettings.json` with your SQL Server connection string
-   - Ensure JWT configuration matches IdentityService
-   - Apply migrations: `dotnet ef database update`
-   - Run: `dotnet run`
 
 ### Quick Start Guide
 
+**Option 1: Using API Gateway (Recommended)**
+1. **Start all microservices** (Ports: 7011, 7264, 7001)
+2. **Start API Gateway** (Port: 7000)
+3. **Register a user** via `POST https://localhost:7000/gateway/auth/register`
+4. **Login** to get JWT token via `POST https://localhost:7000/gateway/auth/login`
+5. **Access any service** through the gateway using `/gateway/*` routes
+
+**Option 2: Direct Service Access**
 1. **Start IdentityService** (Port: 7011)
 2. **Register a user** via `POST /api/auth/register`
 3. **Login** to get JWT token via `POST /api/auth/login`
-4. **Start HotelService** (Port: 7264)
-5. **Authorize in Swagger** with the JWT token
-6. **Test hotel operations** (guests, rooms, reservations)
+4. **Start other services** and use JWT token for authorization
 
 ## API Documentation
 
 Each service has Swagger UI available at their root URL:
 
+- **API Gateway:** `https://localhost:7000` (Unified entry point)
 - **IdentityService:** `https://localhost:7011`
 - **HotelService:** `https://localhost:7264`
+- **ManagementService:** `https://localhost:7001`
 
 ## Authentication Flow
 
@@ -195,8 +252,10 @@ Use Swagger UI for testing:
 
 ## Detailed Setup Guides
 
+- [API Gateway Documentation](./ApiGateway/README.md)
 - [IdentityService Setup Guide](./IdentityService/SETUP.md)
 - [HotelService Setup Guide](./HotelService/SETUP.md)
+- [ManagementService Setup Guide](./ManagementService/SETUP.md)
 
 ## Contributing
 
